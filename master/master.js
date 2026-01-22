@@ -1,17 +1,22 @@
 import { supabase } from './core/supabase.js';
 
+/* =======================
+   PROTEÇÃO MASTER
+======================= */
 const MASTER_EMAIL = 'andre_ssp@live.com';
 const { data: { user } } = await supabase.auth.getUser();
 
 if (!user || user.email !== MASTER_EMAIL) {
   window.location.href = './login.html';
 }
+
 /* =======================
    ELEMENTOS
 ======================= */
 const lista = document.getElementById('lista');
 const form = document.getElementById('formCriar');
 const filtros = document.querySelectorAll('.filtros button');
+const btnSair = document.getElementById('btnSair');
 
 /* =======================
    ESTADO
@@ -120,7 +125,7 @@ lista.addEventListener('click', async (e) => {
   }
 
   if (acao === 'reenviar') {
-    reenviarAcesso(id);
+    await reenviarAcesso(id);
   }
 });
 
@@ -143,7 +148,7 @@ async function atualizarStatus(id, status) {
 }
 
 /* =======================
-   REENVIAR ACESSO
+   REENVIAR ACESSO (EDGE)
 ======================= */
 async function reenviarAcesso(tenantId) {
   const tenant = cache.find(t => t.id === tenantId);
@@ -153,28 +158,33 @@ async function reenviarAcesso(tenantId) {
     return;
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    tenant.admin_email,
+  const response = await fetch(
+    'https://aopauiwavjqbyhcnhkee.functions.supabase.co/criar-tenant',
     {
-      redirectTo: window.location.origin + '/cliente/definir-senha.html'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: tenant.admin_email,
+        nome_barbearia: tenant.name,
+        slug: gerarSlug(tenant.name)
+      })
     }
   );
 
-  if (error) {
-    console.error(error);
-    alert('Erro ao reenviar acesso');
+  const result = await response.json();
+
+  if (!response.ok) {
+    alert('Erro ao reenviar acesso: ' + (result.error || 'erro desconhecido'));
     return;
   }
 
   // WhatsApp (opcional)
   const msg = `
 Olá! 👋
-Sua barbearia já foi cadastrada no sistema.
+Seu acesso ao sistema foi criado.
 
-👉 Clique no link que enviamos por email para definir sua senha e acessar o painel.
-
-Qualquer dúvida, é só responder 🙂
-  `.trim();
+👉 Verifique seu email para definir a senha e acessar o painel.
+`.trim();
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(whatsappUrl, '_blank');
@@ -182,9 +192,8 @@ Qualquer dúvida, é só responder 🙂
   alert('Acesso reenviado com sucesso');
 }
 
-
 /* =======================
-   gerar slug automaticamente
+   GERAR SLUG
 ======================= */
 function gerarSlug(texto) {
   return texto
@@ -193,7 +202,6 @@ function gerarSlug(texto) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '');
 }
-
 
 /* =======================
    FILTROS
@@ -209,7 +217,7 @@ filtros.forEach(btn => {
 });
 
 /* =======================
-   CRIAR TENANT
+   CRIAR TENANT (EDGE)
 ======================= */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -224,35 +232,58 @@ form.addEventListener('submit', async (e) => {
 
   const slug = gerarSlug(name);
 
-    const { error } = await supabase
-      .from('tenants')
-      .insert({
-        name,
-        slug,
-        admin_email,
-        status: 'pendente'
-      });
-
-    if (error) {
-      console.error('Erro ao criar tenant:', error);
-      alert('Erro ao criar barbearia');
-      return;
+  // 1️⃣ Criar usuário Auth + enviar email
+  const response = await fetch(
+    'https://aopauiwavjqbyhcnhkee.functions.supabase.co/criar-tenant',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: admin_email,
+        nome_barbearia: name,
+        slug
+      })
     }
+  );
 
-    const btnSair = document.getElementById('btnSair');
+  const result = await response.json();
 
-    if (btnSair) {
-      btnSair.addEventListener('click', async () => {
-        await supabase.auth.signOut();
-        window.location.href = './login.html';
-      });
-    }
+  if (!response.ok) {
+    alert('Erro ao criar acesso: ' + (result.error || 'erro desconhecido'));
+    return;
+  }
 
+  // 2️⃣ Salvar tenant no banco
+  const { error } = await supabase
+    .from('tenants')
+    .insert({
+      name,
+      slug,
+      admin_email,
+      status: 'pendente'
+    });
 
+  if (error) {
+    console.error('Erro ao criar tenant:', error);
+    alert('Erro ao salvar barbearia');
+    return;
+  }
+
+  alert('Barbearia criada e convite enviado com sucesso');
 
   form.reset();
   carregar();
 });
+
+/* =======================
+   LOGOUT
+======================= */
+if (btnSair) {
+  btnSair.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = './login.html';
+  });
+}
 
 /* =======================
    INIT

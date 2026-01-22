@@ -158,16 +158,20 @@ async function reenviarAcesso(tenantId) {
     return;
   }
 
-  const response = await fetch('https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      nome_barbearia: name,
-      slug
-    })
-  });
+  const slug = gerarSlug(tenant.name);
 
+  const response = await fetch(
+    'https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: tenant.admin_email,
+        nome_barbearia: tenant.name,
+        slug
+      })
+    }
+  );
 
   const result = await response.json();
 
@@ -179,7 +183,7 @@ async function reenviarAcesso(tenantId) {
   // WhatsApp (opcional)
   const msg = `
 Olá! 👋
-Seu acesso ao sistema foi criado.
+Seu acesso ao sistema foi criado ou reenviado com sucesso.
 
 👉 Verifique seu email para definir a senha e acessar o painel.
 `.trim();
@@ -189,6 +193,7 @@ Seu acesso ao sistema foi criado.
 
   alert('Acesso reenviado com sucesso');
 }
+
 
 /* =======================
    GERAR SLUG

@@ -158,18 +158,16 @@ async function reenviarAcesso(tenantId) {
     return;
   }
 
-  const response = await fetch(
-    'https://aopauiwavjqbyhcnhkee.functions.supabase.co/criar-tenant',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: tenant.admin_email,
-        nome_barbearia: tenant.name,
-        slug: gerarSlug(tenant.name)
-      })
-    }
-  );
+  const response = await fetch('https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      nome_barbearia: name,
+      slug
+    })
+  });
+
 
   const result = await response.json();
 
@@ -233,18 +231,16 @@ form.addEventListener('submit', async (e) => {
   const slug = gerarSlug(name);
 
   // 1️⃣ Criar usuário Auth + enviar email
-  const response = await fetch(
-    'https://aopauiwavjqbyhcnhkee.functions.supabase.co/criar-tenant',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: admin_email,
-        nome_barbearia: name,
-        slug
-      })
-    }
-  );
+  const response = await fetch('https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      nome_barbearia: name,
+      slug
+    })
+  });
+
 
   const result = await response.json();
 

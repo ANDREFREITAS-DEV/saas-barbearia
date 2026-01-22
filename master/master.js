@@ -1,174 +1,149 @@
-import { supabase } from './core/supabase.js';
+import { supabase } from '../core/supabase.js';
 
-/* =======================
-   PROTEÇÃO MASTER
-======================= */
-const MASTER_EMAIL = 'andre_ssp@live.com';
-const { data: { user } } = await supabase.auth.getUser();
+/* =========================
+   UTIL
+========================= */
+function gerarSlug(texto) {
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
 
-if (!user || user.email !== MASTER_EMAIL) {
+/* =========================
+   SESSÃO MASTER
+========================= */
+const {
+  data: { session }
+} = await supabase.auth.getSession();
+
+if (!session) {
   window.location.href = './login.html';
 }
 
-/* =======================
+/* =========================
    ELEMENTOS
-======================= */
-const lista = document.getElementById('lista');
+========================= */
 const form = document.getElementById('formCriar');
-const filtros = document.querySelectorAll('.filtros button');
+const tbody = document.querySelector('tbody');
+const filtros = document.querySelectorAll('[data-filtro]');
 const btnSair = document.getElementById('btnSair');
 
-/* =======================
-   ESTADO
-======================= */
-let statusAtual = 'todos';
-let cache = [];
+let filtroAtual = 'todos';
 
-/* =======================
-   LISTAR TENANTS
-======================= */
-async function carregar() {
-  const { data, error } = await supabase
-    .from('tenants')
-    .select('id, name, status, admin_email, created_at')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Erro ao carregar tenants:', error);
-    lista.innerHTML = `
-      <tr>
-        <td colspan="4">Erro ao carregar dados</td>
-      </tr>
-    `;
-    return;
-  }
-
-  cache = data ?? [];
-  render();
-}
-
-/* =======================
-   RENDER
-======================= */
-function render() {
-  lista.innerHTML = '';
-
-  const filtrados = cache.filter(t =>
-    statusAtual === 'todos' ? true : t.status === statusAtual
-  );
-
-  if (filtrados.length === 0) {
-    lista.innerHTML = `
-      <tr>
-        <td colspan="4">Nenhuma barbearia encontrada</td>
-      </tr>
-    `;
-    return;
-  }
-
-  filtrados.forEach(t => {
-    const tr = document.createElement('tr');
-
-    tr.innerHTML = `
-      <td>${t.name}</td>
-      <td>${t.admin_email ?? '-'}</td>
-      <td class="status-${t.status}">${t.status}</td>
-      <td>${acoesPorStatus(t)}</td>
-    `;
-
-    lista.appendChild(tr);
+/* =========================
+   SAIR
+========================= */
+if (btnSair) {
+  btnSair.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = './login.html';
   });
 }
 
-/* =======================
-   AÇÕES POR STATUS
-======================= */
-function acoesPorStatus(t) {
-  if (t.status === 'pendente') {
-    return `
-      <button data-id="${t.id}" data-acao="inativar">Inativar</button>
-      <button data-id="${t.id}" data-acao="reenviar">Reenviar acesso</button>
-    `;
+/* =========================
+   CARREGAR TENANTS
+========================= */
+async function carregar() {
+  let query = supabase.from('tenants').select('*').order('created_at', { ascending: false });
+
+  if (filtroAtual !== 'todos') {
+    query = query.eq('status', filtroAtual);
   }
 
-  if (t.status === 'ativo') {
-    return `
-      <button data-id="${t.id}" data-acao="inativar">Inativar</button>
-    `;
+  const { data, error } = await query;
+
+  if (error) {
+    alert('Erro ao carregar dados');
+    return;
   }
 
-  if (t.status === 'inativo') {
-    return `
-      <button data-id="${t.id}" data-acao="ativar">Reativar</button>
-    `;
-  }
+  tbody.innerHTML = '';
 
-  return '';
+  data.forEach((tenant) => {
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td>${tenant.name}</td>
+      <td>${tenant.admin_email || '-'}</td>
+      <td class="${tenant.status}">${tenant.status}</td>
+      <td>
+        ${
+          tenant.status === 'inativo'
+            ? `<button data-acao="ativar" data-id="${tenant.id}">Reativar</button>`
+            : `<button data-acao="inativar" data-id="${tenant.id}">Inativar</button>`
+        }
+        <button data-acao="reenviar" data-id="${tenant.id}">Reenviar acesso</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 
-/* =======================
-   HANDLER DE AÇÕES
-======================= */
-lista.addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
+/* =========================
+   FILTROS
+========================= */
+filtros.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    filtroAtual = btn.dataset.filtro;
+    carregar();
+  });
+});
 
-  const id = btn.dataset.id;
-  const acao = btn.dataset.acao;
+/* =========================
+   AÇÕES (ATIVAR / INATIVAR / REENVIAR)
+========================= */
+tbody.addEventListener('click', async (e) => {
+  const acao = e.target.dataset.acao;
+  const id = e.target.dataset.id;
+
+  if (!acao || !id) return;
 
   if (acao === 'ativar') {
-    await atualizarStatus(id, 'ativo');
+    await supabase.from('tenants').update({ status: 'ativo' }).eq('id', id);
+    carregar();
   }
 
   if (acao === 'inativar') {
-    await atualizarStatus(id, 'inativo');
+    await supabase.from('tenants').update({ status: 'inativo' }).eq('id', id);
+    carregar();
   }
 
   if (acao === 'reenviar') {
-    await reenviarAcesso(id);
+    reenviarAcesso(id);
   }
 });
 
-/* =======================
-   UPDATE STATUS
-======================= */
-async function atualizarStatus(id, status) {
-  const { error } = await supabase
-    .from('tenants')
-    .update({ status })
-    .eq('id', id);
-
-  if (error) {
-    console.error('Erro ao atualizar status:', error);
-    alert('Erro ao atualizar status');
-    return;
-  }
-
-  carregar();
-}
-
-/* =======================
-   REENVIAR ACESSO (EDGE)
-======================= */
+/* =========================
+   REENVIAR ACESSO
+========================= */
 async function reenviarAcesso(tenantId) {
-  const tenant = cache.find(t => t.id === tenantId);
+  const { data: tenant, error } = await supabase
+    .from('tenants')
+    .select('name, slug, admin_email')
+    .eq('id', tenantId)
+    .single();
 
-  if (!tenant || !tenant.admin_email) {
-    alert('Email do dono não encontrado');
+  if (error || !tenant) {
+    alert('Erro ao localizar barbearia');
     return;
   }
-
-  const slug = gerarSlug(tenant.name);
 
   const response = await fetch(
     'https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
       body: JSON.stringify({
         email: tenant.admin_email,
         nome_barbearia: tenant.name,
-        slug
+        slug: tenant.slug
       })
     }
   );
@@ -176,52 +151,16 @@ async function reenviarAcesso(tenantId) {
   const result = await response.json();
 
   if (!response.ok) {
-    alert('Erro ao reenviar acesso: ' + (result.error || 'erro desconhecido'));
+    alert('Erro ao reenviar acesso');
     return;
   }
-
-  // WhatsApp (opcional)
-  const msg = `
-Olá! 👋
-Seu acesso ao sistema foi criado ou reenviado com sucesso.
-
-👉 Verifique seu email para definir a senha e acessar o painel.
-`.trim();
-
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(whatsappUrl, '_blank');
 
   alert('Acesso reenviado com sucesso');
 }
 
-
-/* =======================
-   GERAR SLUG
-======================= */
-function gerarSlug(texto) {
-  return texto
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
-}
-
-/* =======================
-   FILTROS
-======================= */
-filtros.forEach(btn => {
-  btn.addEventListener('click', () => {
-    filtros.forEach(b => b.classList.remove('ativo'));
-    btn.classList.add('ativo');
-
-    statusAtual = btn.dataset.status;
-    render();
-  });
-});
-
-/* =======================
-   CRIAR TENANT (EDGE)
-======================= */
+/* =========================
+   CRIAR BARBEARIA
+========================= */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -237,63 +176,48 @@ form.addEventListener('submit', async (e) => {
 
   // 1️⃣ Criar usuário Auth + enviar email
   const response = await fetch(
-  'https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia',
-  {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${session.access_token}`
-    },
-    body: JSON.stringify({
-      email: tenant.admin_email,
-      nome_barbearia: tenant.name,
-      slug
-    })
-  }
-);
-
-
+    'https://aopauiwavjqbyhcnhkee.supabase.co/functions/v1/criar-admin-barbearia',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        email: admin_email,
+        nome_barbearia: name,
+        slug
+      })
+    }
+  );
 
   const result = await response.json();
 
   if (!response.ok) {
-    alert('Erro ao criar acesso: ' + (result.error || 'erro desconhecido'));
+    alert('Erro ao criar acesso');
     return;
   }
 
-  // 2️⃣ Salvar tenant no banco
-  const { error } = await supabase
-    .from('tenants')
-    .insert({
-      name,
-      slug,
-      admin_email,
-      status: 'pendente'
-    });
+  // 2️⃣ Salvar tenant
+  const { error } = await supabase.from('tenants').insert({
+    name,
+    slug,
+    admin_email,
+    status: 'pendente'
+  });
 
   if (error) {
-    console.error('Erro ao criar tenant:', error);
     alert('Erro ao salvar barbearia');
     return;
   }
 
-  alert('Barbearia criada e convite enviado com sucesso');
+  alert('Barbearia criada e convite enviado');
 
   form.reset();
   carregar();
 });
 
-/* =======================
-   LOGOUT
-======================= */
-if (btnSair) {
-  btnSair.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    window.location.href = './login.html';
-  });
-}
-
-/* =======================
+/* =========================
    INIT
-======================= */
+========================= */
 carregar();

@@ -1,10 +1,13 @@
-import { supabase } from '../master/core/supabase.js';
+import { supabase } from './core/supabase.js';
 
 const form = document.getElementById('formSenha');
 const msg = document.getElementById('msg');
+const sucesso = document.getElementById('sucesso');
+const btnLogin = document.getElementById('btnLogin');
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  msg.textContent = '';
 
   const senha = document.getElementById('senha').value;
   const confirmar = document.getElementById('confirmar').value;
@@ -14,7 +17,7 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  // 1. Atualiza a senha do usuário autenticado pelo link
+  // Atualiza a senha do usuário autenticado pelo link
   const { data, error } = await supabase.auth.updateUser({
     password: senha
   });
@@ -25,16 +28,16 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  // 2. Buscar tenant do usuário
   const user = data.user;
 
+  // Buscar tenant do usuário
   const { data: profile } = await supabase
     .from('profiles')
     .select('tenant_id')
     .eq('user_id', user.id)
     .single();
 
-  // 3. Ativar o tenant
+  // Ativar o tenant
   if (profile?.tenant_id) {
     await supabase
       .from('tenants')
@@ -42,6 +45,12 @@ form.addEventListener('submit', async (e) => {
       .eq('id', profile.tenant_id);
   }
 
-  // 4. Redirecionar para o painel do cliente
-  window.location.href = '/cliente/painel.html';
+  // UX final (opção 3)
+  form.style.display = 'none';
+  sucesso.style.display = 'block';
+});
+
+// Botão explícito para login
+btnLogin.addEventListener('click', () => {
+  window.location.href = '/login.html';
 });

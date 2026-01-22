@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
 <body>
+
   <h1>Crie sua senha</h1>
 
   <form id="formSenha">
@@ -25,10 +26,15 @@
       minlength="6"
     />
 
-    <button type="submit">Salvar e entrar</button>
+    <button type="submit">Salvar senha</button>
   </form>
 
   <p id="msg"></p>
+
+  <div id="sucesso" style="display:none;">
+    <p>✅ Senha criada com sucesso.</p>
+    <button id="btnLogin">Entrar no sistema</button>
+  </div>
 
   <script type="module" src="./definir-senha.js"></script>
 </body>

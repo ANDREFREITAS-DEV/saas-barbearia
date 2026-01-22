@@ -1,4 +1,4 @@
-import { supabase } from './core/supabase.js';
+import { supabase } from '../core/supabase.js';
 
 const form = document.getElementById('formSenha');
 const msg = document.getElementById('msg');

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Definir Senha</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+  <h1>Crie sua senha</h1>
+
+  <form id="formSenha">
+    <input
+      type="password"
+      id="senha"
+      placeholder="Nova senha"
+      required
+      minlength="6"
+    />
+
+    <input
+      type="password"
+      id="confirmar"
+      placeholder="Confirmar senha"
+      required
+      minlength="6"
+    />
+
+    <button type="submit">Salvar e entrar</button>
+  </form>
+
+  <p id="msg"></p>
+
+  <script type="module" src="./definir-senha.js"></script>
+</body>
+</html>

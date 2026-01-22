@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel Master</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./master.css">
+</head>
+
+<body>
+  
+
+  <header style="display:flex; justify-content: space-between; align-items:center;">
+    <h1>Painel Master</h1>
+    <button id="btnSair">Sair</button>
+    </header>
+
+
+  <!-- CRIAR BARBEARIA -->
+  <section>
+    <h2>Criar Barbearia</h2>
+
+    <form id="formCriar">
+      <input
+        type="text"
+        id="nome"
+        placeholder="Nome da barbearia"
+        required
+      />
+      <input
+        type="email"
+        id="email"
+        placeholder="Email do dono"
+        required
+      />
+      <button type="submit">Criar</button>
+    </form>
+  </section>
+
+  <!-- FILTROS -->
+  <section class="filtros">
+    <button data-status="todos" class="ativo">Todos</button>
+    <button data-status="pendente">Pendentes</button>
+    <button data-status="ativo">Ativos</button>
+    <button data-status="inativo">Inativos</button>
+  </section>
+
+  <!-- LISTA -->
+  <section>
+    <table>
+      <thead>
+        <tr>
+          <th>Barbearia</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </section>
+
+  <script type="module" src="./master.js"></script>
+</body>
+</html>

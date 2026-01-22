@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendar Horário</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO básico -->
+  <meta name="description" content="Agende seu horário de forma rápida e fácil.">
+  <meta property="og:title" content="Agendamento Online">
+  <meta property="og:description" content="Escolha o serviço e agende seu horário.">
+  <meta property="og:type" content="website">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/theme.css">
+  <link rel="stylesheet" href="./css/app.css">
+
+  <!-- Importmap -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+    }
+  }
+  </script>
+</head>
+
+<body>
+
+<!-- Banner offline -->
+<div id="offline-banner" hidden>
+  Você está offline. Alguns recursos podem não funcionar.
+</div>
+
+<header class="app-header">
+  <h1 id="tenant-name">Agendamento</h1>
+</header>
+
+<main>
+
+  <!-- VIEW PÚBLICA DE AGENDAMENTO -->
+  <section id="view-booking">
+
+    <h2>Agendar Horário</h2>
+
+    <!-- Serviços -->
+    <div class="booking-block">
+      <label for="booking-service">Serviço</label>
+      <select id="booking-service">
+        <option value="">Selecione um serviço</option>
+      </select>
+    </div>
+
+    <!-- Data -->
+    <div class="booking-block">
+      <label for="booking-date">Data</label>
+      <input type="date" id="booking-date">
+    </div>
+
+    <!-- Horários -->
+    <div class="booking-block">
+      <label>Horários disponíveis</label>
+      <div id="booking-slots" class="slots-grid"></div>
+    </div>
+
+    <!-- Dados do cliente -->
+    <div class="booking-block">
+      <label for="client-name">Seu nome</label>
+      <input type="text" id="client-name" placeholder="Nome completo">
+    </div>
+
+    <div class="booking-block">
+      <label for="client-phone">WhatsApp</label>
+      <input type="tel" id="client-phone" placeholder="(00) 00000-0000">
+    </div>
+
+    <button id="btn-confirm-booking" class="btn-primary">
+      Confirmar Agendamento
+    </button>
+
+    <p id="booking-message"></p>
+
+  </section>
+
+</main>
+
+<footer class="bottom-nav">
+  <button class="nav-item active">
+    📅 Agendar
+  </button>
+</footer>
+
+<!-- JS PRINCIPAL (modo público) -->
+<script type="module" src="./core/main.js"></script>
+
+<script>
+  // Offline banner simples
+  function updateOnlineStatus() {
+    const banner = document.getElementById('offline-banner');
+    banner.hidden = navigator.onLine;
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+</script>
+
+</body>
+</html>

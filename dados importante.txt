@@ -1,0 +1,44 @@
+Nome do projeto			saas barbearia 
+Senha do banco de dados		hD0RBAgKvLMsevFm	
+URL do projeto			https://aopauiwavjqbyhcnhkee.supabase.co
+Chave de API publicável		sb_publishable_rn_uS0krjsM5niBeZe7Ibw_sMFwzIJP
+anon  public			eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvcGF1aXdhdmpxYnloY25oa2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5NTkyNDksImV4cCI6MjA4NDUzNTI0OX0.SJjpEJTZoymFprMHse_ZOeyJD6Rssc8CVV16xq1Mr-c
+
+chave service_role		eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvcGF1aXdhdmpxYnloY25oa2VlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODk1OTI0OSwiZXhwIjoyMDg0NTM1MjQ5fQ.csJVVh1uvz1c8Jxj32ntzr438qR4EOO0x1g6dePQtQc
+
+sempre roda o servidor		npx http-server .
+
+c60fd2e7-d8f1-485a-af96-d3eb44abddd8
+insert into public.tenants (slug, name)
+values ('barbearia23', 'Barbearia 23');
+
+barbeiro1@gmail.com	123456	54eba520-2a50-4593-b50e-866997c2c86d
+
+Endereços que você pode acessar no navegador:
+
+Projeto raiz (cliente):
+
+http://127.0.0.1:8080/
+
+
+ou
+
+http://localhost:8080/
+
+
+Master:
+
+http://127.0.0.1:8080/master/index.html
+
+
+Cliente (painel):
+
+http://127.0.0.1:8080/cliente/painel.html
+
+
+Tela de definir senha:
+
+http://127.0.0.1:8080/cliente/definir-senha.html
+
+
+Se index.html está na raiz, ele abre automaticamente em /.

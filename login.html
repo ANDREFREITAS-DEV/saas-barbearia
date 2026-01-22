@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+
+  <h1>Entrar no Painel</h1>
+
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="senha" placeholder="Senha" required />
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p id="msg"></p>
+
+  <script type="module">
+    import { supabase } from './core/supabase.js';
+
+    const msg = document.getElementById('msg');
+
+    // Se já estiver logado, vai direto para o painel
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session) {
+      window.location.href = '/painel/';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('senha').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        msg.textContent = 'Email ou senha inválidos';
+        return;
+      }
+
+      const user = data.user;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!profile?.tenant_id) {
+        msg.textContent = 'Perfil não vinculado a uma empresa';
+        return;
+      }
+
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('slug, status')
+        .eq('id', profile.tenant_id)
+        .single();
+
+      if (!tenant || tenant.status !== 'ativo') {
+        msg.textContent = 'Empresa inativa';
+        return;
+      }
+
+      window.location.href = `/painel/?tenant=${tenant.slug}`;
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+body {
+  font-family: system-ui, sans-serif;
+  background: #f7f7f8;
+  padding: 16px;
+}
+
+h1, h2 {
+  margin-top: 0;
+}
+
+form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+input {
+  padding: 6px;
+}
+
+button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.filtros {
+  margin: 16px 0;
+}
+
+.filtros button {
+  margin-right: 6px;
+}
+
+.filtros button.ativo {
+  font-weight: bold;
+}
+
+.status-pendente { color: orange; }
+.status-ativo { color: green; }
+.status-inativo { color: red; }

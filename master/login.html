@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login Master</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+  <h1>Login Master</h1>
+
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="senha" placeholder="Senha" required />
+    <button type="submit">Entrar</button>
+  </form>
+
+    <script type="module">
+    import { supabase } from './core/supabase.js';
+
+    const MASTER_EMAIL = 'andre_ssp@live.com';
+
+    const form = document.getElementById('loginForm');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const emailInput = document.getElementById('email');
+        const senhaInput = document.getElementById('senha');
+
+        const email = emailInput.value;
+        const password = senhaInput.value;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+        });
+
+        if (error) {
+        alert('Login inválido');
+        return;
+        }
+
+        if (data.user.email !== MASTER_EMAIL) {
+        await supabase.auth.signOut();
+        alert('Acesso não autorizado');
+        return;
+        }
+
+        window.location.href = './index.html';
+    });
+    </script>
+
+</body>
+</html>

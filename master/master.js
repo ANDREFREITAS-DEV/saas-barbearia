@@ -1,4 +1,5 @@
-import { supabase } from '../core/supabase.js';
+import { supabase } from '/core/supabase.js';
+
 
 /* =========================
    UTIL
